@@ -13,7 +13,8 @@
  					<div v-if="paginatedResults.length ===0">没有结果</div>
  					<div v-else>
  						<div class="imgs-container" v-for="(item, index) in paginatedResults" :key="index">
- 							<div class="img-container">
+ 							<div class="img-container" :class="item.rarity =='六星'? 'bkurlsix' : 
+							item.rarity=='五星' ? 'bkurlfive' : item.rarity=='四星' ? 'bkurlfour' : ' ' ">
  								<div style="height: 20%;width: 20%;">
  									<img :src="item.thumbnail"
  										style="width: 60px;height: 60px; transform-origin: 50% 50%; transform: scale(1);border: 2px solid white;" />
@@ -67,8 +68,11 @@
  			},
  			totalPages() {
  				return Math.ceil(this.totalResults.length / this.pageSize);
- 			}
+ 			},
  		},
+		mounted() {
+			
+		},
  		methods: {
  			SearchRecord() {
  				this.isModalVisible = true;
@@ -81,6 +85,7 @@
  				if (this.currentPage < this.totalPages) {
  					this.currentPage += 1;
  				}
+				//console.log(this.totalResults);
  			},
  			prevPage() {
  				if (this.currentPage > 1) {
@@ -191,9 +196,17 @@
  		justify-content: space-between;
  		align-items: center;
 
-
  	}
-
+	.bkurlsix{
+		background: url(../assets/img/resultstarbacksix_00000.png);
+	}
+	.bkurlfive{
+		background: url(../assets/img/resultstarbackfive_00000.png);
+	}
+	.bkurlfour{
+		background: url(../assets/img/resultstarbackfour_00000.png);
+	}
+	
  	.pagination {
  		width: 100%;
  		height: 10%;

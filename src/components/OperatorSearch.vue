@@ -245,7 +245,7 @@
 			document.addEventListener('mousemove', (event) => {
 				this.lastMouseX = event.clientX;
 			});
-			console.log(this.temporaryDrawCount);
+		//	console.log(this.temporaryDrawCount);
 
 		},
 
@@ -347,6 +347,7 @@
 						drawCount: newdrawCount,
 						results: newresults,
 						totalResults: newtotalRes,
+						
 					});
 					const newHechengyu = this.arkhechengyu -= 600;
 					this.updateHechengyu(newHechengyu);
@@ -409,7 +410,7 @@
 				if (random < sixStarProbability) {
 					const isChosen = Math.random() < 0.5;
 					// 寻访完成后将六星概率重置为2%
-					this.clearOperatorSearchResults(); // 重置 临时drawCount，可以根据需要调整 
+					this.clearTemporaryDrawCount(); // 重置 临时drawCount，可以根据需要调整 
 					let SearchCharacter = isChosen ? this.currentCharacter : this.getRandomCharacter(this.characters);
 					this.addSearchCharacters(SearchCharacter);
 

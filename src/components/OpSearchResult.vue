@@ -1,6 +1,6 @@
 <template>
 
-	<div class="op-search-result">
+	<div class="op-search-result" ref="captureArea">
 		<div class="resultBk ">
 			<img src="../assets/img/OperatorBackground_00000.jpg" style="width: 100%;height: 100%;" />
 		</div>
@@ -12,13 +12,16 @@
 				<div v-for="(result, index) in results" :key="index" class="result-box"
 					:class="[flippedCards[index] ? '' : 'flipped',getResultClass(result.rarity)]" id="shadow-mirror"
 					@click="flipCard(index)">
-					<div class="card-inner" >
+					<div class="card-inner">
 						<div class="front" id="shadow">
-							<div class="text" style="z-index: 2;width: 100%;height: 100%;position: relative;" id="shadow-mirror">
+							<div class="text" style="z-index: 2;width: 100%;height: 100%;position: relative;"
+								id="shadow-mirror">
 								<div class="name-container" style="width: 100%;height: 50%; 
 								display: flex;justify-content: center;">{{ result.name }}</div>
-								<div style="width: 100%;height: 50%;display: flex;justify-content: center;align-items: flex-end;">
-									<img :src="result.star"  style="transform-origin: 50% 100%; transform: scale(0.5);"/>
+								<div
+									style="width: 100%;height: 50%;display: flex;justify-content: center;align-items: flex-end;">
+									<img :src="result.star"
+										style="transform-origin: 50% 100%; transform: scale(0.5);" />
 								</div>
 							</div>
 							<img v-if="result.name === '随机六星角色'" :src="result.halfimg" alt="Character Image"
@@ -26,9 +29,10 @@
 							<img v-if="result.name === 'UP六星角色'" :src="currentCharacter.halfimg" alt="Current Character"
 								class="character-image" />
 							<img v-else :src="result.halfimg" class="character-image" />
-							<img src="../assets/img/OperatorCardBackground_00000.jpg" class="character-backgroundimage" />
+							<img src="../assets/img/OperatorCardBackground_00000.jpg"
+								class="character-backgroundimage" />
 						</div>
-						<div class="back" id="shadow">
+						<div class="back" id="shadow" ref="back">
 							<img src="../assets/img/cardBk.jpg" class="cardbk" />
 						</div>
 					</div>
@@ -37,23 +41,39 @@
 			<div v-if="!allFlipped" style=" width: 100%;
     height: 8%; color: aliceblue;display: flex;justify-content: center;align-items:center;z-index: 10;"
 				class="text back-button click-tip">点击任意卡牌翻转!</div>
-			<button v-if="allFlipped" @click="goBack" style="position: 
-			absolute; top: 20px; right: 20px; color: white;z-index: 10;" class="text skip-button">
-				back
-			</button>
+
 			<button v-if="!allFlipped" @click="revealAllCards"
 				style="position: absolute; top: 20px; right: 20px; color: white;z-index: 10;" class="text skip-button">
 				skip
 			</button>
-			<button v-if="allFlipped" @click="shareResults" style=" width: 100%;
-    height: 8%; position: absolute;top: 92%;background-color:
-	 rgb(0, 0, 0,0.6);z-index: 11;" class="text share-button">分享结果</button>
+
 		</div>
 	</div>
+	<button v-if="allFlipped" @click="goBack" style="position:
+	absolute; top: 20px; right: 20px; color: white;z-index: 10;" class="text skip-button">
+		back
+	</button>
+	<button v-if="allFlipped" @click="capture" style=" width: 100%;
+    height: 8%; position: absolute;top: 92%;background-color:
+	 rgb(0, 0, 0,0.6);z-index: 11;" class="text share-button">保存结果</button>
+	<div :class="['modal', {'active': showModal}]">
+		<div class="screenshot-close" @click="closeModal"></div>
 
+		<img :src="screenshotUrl" v-if="screenshotUrl" id="shadow" />
+		<button @click="shareResults" style=" width: 100%;
+		height: 8%; position: absolute;top: 92%;background-color:
+		 rgb(0, 0, 0,0.5);z-index: 111;" class="text share-button">分享结果</button>
+		<div class="download" @click="download" @mouseover="showTooltip = true" @mouseleave="showTooltip = false">
+			<img src="../assets/img/dowload.png" id="shadow-mirror" />
+			<div class="tooltip" v-if="showTooltip" id="shadow-mirror">点击下载图片</div>
+		</div>
+	</div>
 </template>
 
 <script>
+	import html2canvas from 'html2canvas';
+	import domtoimage from 'dom-to-image';
+
 	import {
 		mapState,
 		mapMutations
@@ -63,6 +83,8 @@
 			return {
 				flippedCards: [], // 用于追踪翻转的卡片  
 				allFlipped: false,
+				screenshotUrl: '',
+				showTooltip: false,
 
 			}
 		},
@@ -74,6 +96,49 @@
 			this.flippedCards = Array(this.results.length).fill(false);
 		},
 		methods: {
+			async capture() {
+				const element = this.$refs.captureArea;
+				const canvas = await html2canvas(element);
+
+				const dataURL = canvas.toDataURL('image/png');
+				this.screenshotUrl = dataURL;
+				this.showModal = true;
+
+				const backs = element.querySelectorAll('.back');
+				backs.forEach(back => {
+					back.style.display = 'none';
+				});
+
+
+				// 恢复背面可见  
+				backs.forEach(back => {
+					back.style.display = 'flex'; // 或者根据你的布局设置为原来的值  
+				});
+			},
+			// async capture() {
+			// 	const element = this.$refs.captureArea;
+
+			// 	// 使用 dom-to-image 将节点转换为 PNG 图像  
+			// 	domtoimage.toPng(element)
+			// 		.then((dataUrl) => {
+			// 			this.screenshotUrl = dataUrl; // 设置截图的 URL  
+			// 			this.showModal = true; // 显示模态框  
+			// 		})
+			// 		.catch((error) => {
+			// 			console.error('好像发生了些错误捏~~~', error);
+			// 		});
+			// },
+			download() {
+				// 创建a标签进行下载
+				const downloadLink = document.createElement('a');
+				downloadLink.href = this.screenshotUrl;
+				downloadLink.download = 'arknights.png'; // 设置下载文件名  
+				downloadLink.click(); // 模拟点击进行下载  
+			},
+			closeModal() {
+				this.showModal = false;
+				this.screenshotUrl = '';
+			},
 			goBack() {
 				this.$router.push('/OperatorSearch')
 			},
@@ -133,6 +198,7 @@
 	#shadow-mirror {
 		filter: drop-shadow(2.7px 2.7px 0.6px rgba(0, 0, 0, 0.9));
 	}
+
 	#shadow {
 		filter: drop-shadow(6px 7px 6.6px rgba(0, 0, 0, 0.8));
 	}
@@ -168,7 +234,7 @@
 		align-items: center;
 		align-content: center;
 		z-index: 1;
-		
+
 	}
 
 	.text {
@@ -186,7 +252,7 @@
 		flex-wrap: nowrap;
 		justify-content: center;
 		align-items: center;
-		
+
 		z-index: 0;
 		pointer-events: auto;
 		position: absolute;
@@ -207,7 +273,7 @@
 		flex-wrap: wrap;
 		overflow: hidden;
 		position: relative;
-		
+
 
 		font-size: 16px;
 		/*文字大小 */
@@ -216,11 +282,10 @@
 		box-shadow: 0 0 1 5px rgba(0, 0, 0, 0.3);
 		/*盒子阴影 */
 		perspective: 1000px;
-		
+
 	}
 
-	.result-box
-	.card-inner {
+	.result-box .card-inner {
 		width: 100%;
 		height: 40%;
 		position: relative;
@@ -234,7 +299,7 @@
 		transform: rotateY(180deg);
 		/* 翻转效果 */
 	}
-	
+
 
 	.front,
 	.back {
@@ -248,30 +313,31 @@
 		justify-content: center;
 	}
 
-	.back {	
+	.back {
 		transform: rotateY(180deg);
 		/* 背面旋转180度 */
 	}
 
 	/* 不同稀有度的背景和光效 */
-	.six-star{
+	.six-star {
 		background: url(../assets/img/resultstarbacksix_00000.png);
 		/* 六星背景色 */
 	}
+
 	.five-star {
 		background: url(../assets/img/resultstarbackfive_00000.png);
 	}
 
 	.four-star {
 		background: url(../assets/img/resultstarbackfour_00000.png);
-	
+
 	}
 
 	.three-star {
 		background: url(../assets/img/resultstarbackthree_00000.png);
-		
+
 	}
-	
+
 	.text {
 
 		font-family: 'Noto Serif SC', serif;
@@ -290,7 +356,8 @@
 		z-index: 1;
 		position: absolute;
 	}
-	.character-backgroundimage{
+
+	.character-backgroundimage {
 		width: auto;
 		height: 100%;
 		z-index: 0;
@@ -343,6 +410,78 @@
 		align-items: center;
 	}
 
+	.modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.6);
+		display: none;
+		justify-content: center;
+		align-items: center;
+		z-index: 100;
+		user-select: auto;
+	}
+
+	.screenshot-close {
+		position: absolute;
+		z-index: 100;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+
+	}
+
+	.modal img {
+		position: absolute;
+		z-index: 101;
+		max-width: 60%;
+		max-height: 60%;
+		user-select: none;
+
+	}
+
+	.download {
+		position: relative;
+		z-index: 112;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 2%;
+		height: 4%;
+		margin-top: 39%;
+		margin-left: 78%;
+
+
+	}
+
+	.tooltip {
+		position: absolute;
+		background-color: rgba(0, 0, 0, 0.7);
+		color: #fff;
+		padding: 5px 10px;
+		font-size: 14px;
+		top: -30px;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 113;
+		white-space: nowrap;
+		font-family: 'Noto Serif SC', serif;
+	}
+
+	.download img {
+		object-fit: cover;
+		max-width: 100%;
+		max-height: 100%;
+	}
+
+	.modal.active {
+		display: flex;
+	}
+
 	/* 定义动画效果 */
 	@keyframes fadeInOut {
 		0% {
@@ -371,5 +510,4 @@
 			/* 最终保持为0 */
 		}
 	}
-	
 </style>
